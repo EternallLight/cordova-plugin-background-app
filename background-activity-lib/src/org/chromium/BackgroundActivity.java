@@ -29,6 +29,20 @@ public class BackgroundActivity extends Activity
         super.onCreate(savedInstanceState);
         topInstance = this;
 
+        Bundle extras = getIntent().getExtras();
+
+        if (extras != null) {
+            Log.d("BackgroundActivity", "Extras exist");
+//            String startOnBackground = extras.getString("START_ON_BACKGROUND");
+//            Log.d(LOG_TAG, "startonBackground" + startOnBackground);
+//            if("1".equals(startOnBackground)) {
+//                Log.d(LOG_TAG, "Starting Main Activity on background...");
+//                moveTaskToBack(true);
+//            }
+        } else {
+            Log.d("BackgroundActivity", "Extras = null");
+        }
+
         final Application app = (Application)getApplicationContext();
         app.registerActivityLifecycleCallbacks(new Application.ActivityLifecycleCallbacks() {
             @Override
@@ -103,6 +117,32 @@ public class BackgroundActivity extends Activity
         // However, it seems that on Lollipop, the flag isn't present, while on JellyBean it is.
         // It's launcher-dependent though.
         Intent intent = makeMainActivityIntent(context, fromLauncher, Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+
+        prevLaunchWasProgrammatic = !fromLauncher;
+
+        if (!isAlreadyRunning) {
+            Log.i(LOG_TAG, "Starting foreground for first time. fromLauncher=" + fromLauncher);
+        } else if (topInstance != null) {
+            Log.i(LOG_TAG, "Reparenting background->foreground. fromLauncher=" + fromLauncher);
+        } else {
+            Log.i(LOG_TAG, "Resuming foreground activity. fromLauncher=" + fromLauncher);
+        }
+        // Need to use application context on older androids for intents not to be ignored :S
+        context.getApplicationContext().startActivity(intent);
+    }
+
+    public static void launchForeground(Context context, boolean fromLauncher, Bundle extras) {
+        boolean isAlreadyRunning = BackgroundPlugin.pluginInstance != null;
+
+        // When transitioning from background to foreground, the RESET_TASK_IF_NEEDED is what causes
+        // the MainActivity to be "re-parented" to its own task stack rather than a new activity
+        // being created on it.
+        // If the launcher would contain this flag, then we wouldn't need BackgroundLauncherActivity.
+        // However, it seems that on Lollipop, the flag isn't present, while on JellyBean it is.
+        // It's launcher-dependent though.
+        Intent intent = makeMainActivityIntent(context, fromLauncher, Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+        intent.putExtras(extras);
+
         prevLaunchWasProgrammatic = !fromLauncher;
 
         if (!isAlreadyRunning) {

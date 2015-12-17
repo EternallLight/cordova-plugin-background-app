@@ -6,14 +6,18 @@ package org.chromium;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.util.Log;
 
 public class BackgroundLauncherActivity extends Activity
 {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // TODO: Should forward intent action / extras / flags.
-        BackgroundActivity.launchForeground(this, true);
+
+        Bundle extras = getIntent().getExtras();
+
+        // TODO: Should forward intent action / flags.
+        BackgroundActivity.launchForeground(this, true, extras);
         finish();
     }
 }
